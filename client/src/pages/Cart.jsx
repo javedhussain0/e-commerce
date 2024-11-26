@@ -1,13 +1,22 @@
 import React, { useEffect, useState } from "react";
 import styled from "styled-components";
-import TextInput from "../components/TextInput";
-import Button from "../components/Button";
-import { addToCart, deleteFromCart, getCart, placeOrder } from "../api";
+import { addToCart, deleteFromCart, getCart } from "../api";
 import { useNavigate } from "react-router-dom";
 import { CircularProgress } from "@mui/material";
 import { useDispatch } from "react-redux";
 import { openSnackbar } from "../redux/reducers/snackbarSlice";
 import { DeleteOutline } from "@mui/icons-material";
+import {
+  Box,
+  TextField,
+  Grid,
+  Button,
+  Typography,
+  Card,
+  CardContent,
+  Snackbar,
+  Alert,
+} from "@mui/material";
 
 const Container = styled.div`
   padding: 20px 30px;
@@ -123,13 +132,6 @@ const Subtotal = styled.div`
   display: flex;
   justify-content: space-between;
 `;
-const Delivery = styled.div`
-  font-size: 18px;
-  font-weight: 500;
-  display: flex;
-  gap: 6px;
-  flex-direction: column;
-`;
 
 const Cart = () => {
   const navigate = useNavigate();
@@ -137,15 +139,31 @@ const Cart = () => {
   const [loading, setLoading] = useState(false);
   const [reload, setReload] = useState(false);
   const [products, setProducts] = useState([]);
-  const [buttonLoad, setButtonLoad] = useState(false);
-
-  const [deliveryDetails, setDeliveryDetails] = useState({
-    firstName: "",
-    lastName: "",
-    emailAddress: "",
-    phoneNumber: "",
-    completeAddress: "",
+  const [formData, setFormData] = useState({
+    cardName: "",
+    cardNumber: "",
+    expiryDate: "",
+    cvv: "",
+    billingAddress: "",
   });
+
+  const [alertOpen, setAlertOpen] = useState(false);
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData({ ...formData, [name]: value });
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    console.log("Payment Data:", formData);
+
+    setAlertOpen(true);
+  };
+
+  const handleAlertClose = () => {
+    setAlertOpen(false);
+  };
 
   const getProducts = async () => {
     setLoading(true);
@@ -206,58 +224,6 @@ const Cart = () => {
     getProducts();
   }, [reload]);
 
-  const convertAddressToString = (addressObj) => {
-
-    return `${addressObj.firstName} ${addressObj.lastName}, ${addressObj.completeAddress}, ${addressObj.phoneNumber}, ${addressObj.emailAddress}`;
-  };
-
-  const PlaceOrder = async () => {
-    setButtonLoad(true);
-    try {
-      const isDeliveryDetailsFilled =
-        deliveryDetails.firstName &&
-        deliveryDetails.lastName &&
-        deliveryDetails.completeAddress &&
-        deliveryDetails.phoneNumber &&
-        deliveryDetails.emailAddress;
-
-      if (!isDeliveryDetailsFilled) {
-        dispatch(
-          openSnackbar({
-            message: "Please fill in all required delivery details.",
-            severity: "error",
-          })
-        );
-        return;
-      }
-      const token = localStorage.getItem("javed-app-token");
-      const totalAmount = calculateSubtotal().toFixed(2);
-      const orderDetails = {
-        products,
-        address: convertAddressToString(deliveryDetails),
-        totalAmount,
-      };
-
-      await placeOrder(token, orderDetails);
-
-      dispatch(
-        openSnackbar({
-          message: "Order placed successfully",
-          severity: "success",
-        })
-      );
-      setButtonLoad(false);
-      setReload(!reload);
-    } catch (error) {
-      dispatch(
-        openSnackbar({
-          message: "Failed to place order. Please try again.",
-          severity: "error",
-        })
-      );
-      setButtonLoad(false);
-    }
-  };
   return (
     <Container>
       {loading ? (
@@ -340,98 +306,99 @@ const Cart = () => {
                 <Subtotal>
                   Subtotal : ${calculateSubtotal().toFixed(2)}
                 </Subtotal>
-                <Delivery>
-                  Delivery Details:
-                  <div>
-                    <div
-                      style={{
-                        display: "flex",
-                        gap: "6px",
-                      }}
+                <Box sx={{ display: "flex", justifyContent: "center", mt: 5 }}>
+                  <Card sx={{ maxWidth: 500, width: "100%" }}>
+                    <CardContent>
+                      <Typography variant="h5" gutterBottom>
+                        Payment Details
+                      </Typography>
+                      <form onSubmit={handleSubmit}>
+                        <Grid container spacing={2}>
+                          <Grid item xs={12}>
+                            <TextField
+                              fullWidth
+                              label="Cardholder Name"
+                              name="cardName"
+                              value={formData.cardName}
+                              onChange={handleChange}
+                              required
+                            />
+                          </Grid>
+                          <Grid item xs={12}>
+                            <TextField
+                              fullWidth
+                              label="Card Number"
+                              name="cardNumber"
+                              value={formData.cardNumber}
+                              onChange={handleChange}
+                              required
+                              inputProps={{ maxLength: 16 }}
+                            />
+                          </Grid>
+                          <Grid item xs={6}>
+                            <TextField
+                              fullWidth
+                              label="Expiry Date (MM/YY)"
+                              name="expiryDate"
+                              value={formData.expiryDate}
+                              onChange={handleChange}
+                              required
+                            />
+                          </Grid>
+                          <Grid item xs={6}>
+                            <TextField
+                              fullWidth
+                              label="CVV"
+                              name="cvv"
+                              value={formData.cvv}
+                              onChange={handleChange}
+                              required
+                              type="password"
+                              inputProps={{ maxLength: 3 }}
+                            />
+                          </Grid>
+                          <Grid item xs={12}>
+                            <TextField
+                              fullWidth
+                              label="Billing Address"
+                              name="billingAddress"
+                              value={formData.billingAddress}
+                              onChange={handleChange}
+                              required
+                              multiline
+                              rows={2}
+                            />
+                          </Grid>
+                          <Grid item xs={12}>
+                            <Button
+                              fullWidth
+                              variant="contained"
+                              color="primary"
+                              type="submit"
+                            >
+                              Submit Payment
+                            </Button>
+                          </Grid>
+                        </Grid>
+                      </form>
+                    </CardContent>
+                  </Card>
+
+                  <Snackbar
+                    open={alertOpen}
+                    autoHideDuration={3000}
+                    onClose={handleAlertClose}
+                    anchorOrigin={{ vertical: "top", horizontal: "center" }}
+                  >
+                    <Alert
+                      onClose={handleAlertClose}
+                      severity="success"
+                      variant="filled"
                     >
-                      <TextInput
-                        small
-                        placeholder="First Name"
-                        value={deliveryDetails.firstName}
-                        handelChange={(e) =>
-                          setDeliveryDetails({
-                            ...deliveryDetails,
-                            firstName: e.target.value,
-                          })
-                        }
-                      />
-                      <TextInput
-                        small
-                        placeholder="Last Name"
-                        value={deliveryDetails.lastName}
-                        handelChange={(e) =>
-                          setDeliveryDetails({
-                            ...deliveryDetails,
-                            lastName: e.target.value,
-                          })
-                        }
-                      />
-                    </div>
-                    <TextInput
-                      small
-                      value={deliveryDetails.emailAddress}
-                      handelChange={(e) =>
-                        setDeliveryDetails({
-                          ...deliveryDetails,
-                          emailAddress: e.target.value,
-                        })
-                      }
-                      placeholder="Email Address"
-                    />
-                    <TextInput
-                      small
-                      value={deliveryDetails.phoneNumber}
-                      handelChange={(e) =>
-                        setDeliveryDetails({
-                          ...deliveryDetails,
-                          phoneNumber: e.target.value,
-                        })
-                      }
-                      placeholder="Phone no. +91 XXXXX XXXXX"
-                    />
-                    <TextInput
-                      small
-                      textArea
-                      rows="5"
-                      handelChange={(e) =>
-                        setDeliveryDetails({
-                          ...deliveryDetails,
-                          completeAddress: e.target.value,
-                        })
-                      }
-                      value={deliveryDetails.completeAddress}
-                      placeholder="Complete Address (Address, State, Country, Pincode)"
-                    />
-                  </div>
-                </Delivery>
-                <Delivery>
-                  Payment Details:
-                  <div>
-                    <TextInput small placeholder="Card Number" />
-                    <div
-                      style={{
-                        display: "flex",
-                        gap: "6px",
-                      }}
-                    >
-                      <TextInput small placeholder="Expiry Date" />
-                      <TextInput small placeholder="CVV" />
-                    </div>
-                    <TextInput small placeholder="Card Holder name" />
-                  </div>
-                </Delivery>
-                <Button
-                  text="Pace Order"
-                  small
-                  isLoading={buttonLoad}
-                  isDisabled={buttonLoad}
-                  onClick={PlaceOrder}
-                />
+                      Order Placed Successfully! :${calculateSubtotal().toFixed(2)}
+                    </Alert>
+                  </Snackbar>
+                </Box>
               </Right>
             </Wrapper>
           )}
