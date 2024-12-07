@@ -1,0 +1,15 @@
+{
+  "files": {
+    "main.css": "/javedhussain0/academic_project.git/static/css/main.c5a79f5e.css",
+    "main.js": "/javedhussain0/academic_project.git/static/js/main.6423371d.js",
+    "static/media/AuthImage.png": "/javedhussain0/academic_project.git/static/media/AuthImage.648864e554bed0aa194f.png",
+    "static/media/Header.png": "/javedhussain0/academic_project.git/static/media/Header.0b5252c82ac77b9e7a76.png",
+    "index.html": "/javedhussain0/academic_project.git/index.html",
+    "main.c5a79f5e.css.map": "/javedhussain0/academic_project.git/static/css/main.c5a79f5e.css.map",
+    "main.6423371d.js.map": "/javedhussain0/academic_project.git/static/js/main.6423371d.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.c5a79f5e.css",
+    "static/js/main.6423371d.js"
+  ]
+}
